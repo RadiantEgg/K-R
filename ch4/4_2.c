@@ -80,7 +80,7 @@ int main()
     printf("数字是: %d\n", atoi(s));
     return 0;
 }
-    */
+    
 
 // 扩展读入科学计数法
 
@@ -138,3 +138,101 @@ int main()
     printf("The number is %f\n", atof_plus(s));
     return 0;
 }
+    */
+// 实现可以识别科学计数法的atof
+
+#include <stdio.h>
+#include <ctype.h> // 新头文件
+#include <math.h>
+#include <string.h>
+
+#define MAXLINE 1000
+
+int is_invalid_input(char *s)
+{
+    int i = 0;
+    while (isspace(s[i]))
+        i++;
+    if (!isdigit(s[i]) && s[i] != '+' && s[i] != '-' && s[i] != '.' )
+        return 1;
+    if (s[i] == '-' || s[i] == '+' || s[i] == '.')
+        i++;
+    while (isdigit(s[i]))
+        i++;
+    if (s[i] != 'e' || s[i] != 'E') {
+        return 1;
+    } else {
+        i++;
+        if (!isdigit(s[i]))
+            return 1;
+        while (isdigit(s[i]))
+            i++;
+        if(isalpha(s[i]))
+            return;
+    }
+    return 0;
+}
+
+double my_atof(char *s)
+{
+    double val = 0.0, power = 1.0, factor = 1.0;
+    int i = 0, sign_val, sign_exp, exp = 0;
+    while (isspace(s[i]))
+        i++;
+    sign_val = (s[i] == '-') ? -1 : 1;
+    if (s[i] == '-' || s[i] == '+')
+        i++;
+    while (isdigit(s[i])) {
+        val = val * 10 + (s[i] - '0');
+        i++;
+    }
+    if (s[i] == '.') {
+        i++;
+        while (isdigit(s[i])) {
+            power *= 10;
+            val = val * 10 + (s[i] - '0');
+            i++;
+        }
+    }    
+    if (s[i] == 'e' || s[i] == 'E') {
+        i++;
+        sign_exp = (s[i] == '-') ? -1 : 1;
+        if (s[i] == '-' || s[i] == '+')  
+            i++;
+        while (isdigit(s[i])) {
+            exp = exp * 10 +(s[i] - '0');
+            i++;
+        }
+        factor = pow(10, sign_exp * exp);
+    }
+    return sign_val * val / power * factor;
+}
+
+int main()
+{
+    char s[MAXLINE];
+    while (1) {
+        printf("Input a number (q to quit):");
+        if (fgets(s, MAXLINE, stdin) == NULL)
+            break;
+
+        s[strcspn(s, "\n")] = '\0';
+
+        if (strcmp(s, "q") == 0)
+            break;
+
+        if (is_invalid_input(s)) {
+            printf("Invalid input !\n");
+            continue;
+        }
+
+        if (s[0] == '\0')
+            continue;
+
+        printf("Result: %f \n", my_atof(s));
+    }
+    return 0;
+}
+
+// 还有一个工程级别的算法采用strtod
+

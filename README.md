@@ -1,12 +1,12 @@
 # K&R  C  Learning
 
 > My journey learning "The C Programming Laguange"
-
+---
 ## Progress
 
 ### chapter 4
-- [ ] 4-1
-- [ ] 4-2
+- [x] 4-1
+- [x] 4-2
 - [ ] 4-3 
 - [ ] 4-4
 - [ ] 4-5
@@ -16,4 +16,3 @@
 - [ ] 4-9
 - [ ] 4-10
 - [ ] 4-11
-
