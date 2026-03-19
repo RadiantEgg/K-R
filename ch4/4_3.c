@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <math.h>
 
 #define MAXOP 100
 #define NUMBER '0'
@@ -37,7 +38,7 @@ int main()
                 break;
             case '/':
                 op2 = pop();
-                if (op2 != 0.0)     // 判断是==还是！=
+                if (fabs(op2) > 1e-10)     
                     push(pop() / op2);
                 else 
                     printf("error: zero divisor\n");
@@ -83,18 +84,24 @@ int getop(char *s)
 {
     int i, c;
     while ((s[0] = c = getch()) == ' ' || c == '\t');
-    s[1] = '\0';    // 这个是为什么
-    if (!isdigit(c) && c != '.')
+    s[1] = '\0';    // 提前把字符串合法化
+    if (!isdigit(c) && c != '.' && c != '-')
         return c;
     i = 0;
-    while ((c = getch()) != '.') {
-        s[++i] = c;
-    }
-    if (c == '.') {
-        while ((c = getch()) != EOF) {
-            s[++i] = c;
+    if (c == '-') {
+        int next = getch();
+        if (!isdigit(next)) {
+            ungetch(next);
+            return c;
+        } else {
+            s[++i] = next; 
+            c = next;
         }
     }
+    if (isdigit(c)) 
+        while (isdigit((s[++i] = c = getch())));
+    if (c == '.') 
+        while (isdigit((s[++i] = c = getch())));
     s[i] = '\0';
     if (c != EOF)
         ungetch(c);
