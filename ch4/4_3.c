@@ -10,7 +10,8 @@
 int getop(char *);
 void push(double);
 double pop(void);
-
+int getch(void);
+void ungetch(int);
 
 int main()
 {
@@ -76,4 +77,45 @@ double pop(void)
         printf("error: stack empty\n");
         return 0.0;
     }
+}
+
+int getop(char *s)
+{
+    int i, c;
+    while ((s[0] = c = getch()) == ' ' || c == '\t');
+    s[1] = '\0';    // 这个是为什么
+    if (!isdigit(c) && c != '.')
+        return c;
+    i = 0;
+    while ((c = getch()) != '.') {
+        s[++i] = c;
+    }
+    if (c == '.') {
+        while ((c = getch()) != EOF) {
+            s[++i] = c;
+        }
+    }
+    s[i] = '\0';
+    if (c != EOF)
+        ungetch(c);
+    return NUMBER;
+}
+
+
+#define BUFSIZE 100
+
+char buf[BUFSIZE];
+int bufp = 0;
+
+int getch(void)
+{
+    return (bufp > 0) ? buf[--bufp] : getchar();
+}
+
+void ungetch(int c)
+{
+    if (bufp >= BUFSIZE)
+        printf("ungetch: too many characters\n");
+    else 
+        buf[bufp++] = c;
 }
