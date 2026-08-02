@@ -71,3 +71,41 @@ if (isdigit(c)) {...}
 
 // 大小写等等
 ```
+
+## 5.3
+
+1. &a[i] == a + i
+
+## 5.4
+
+## 5.5
+
+1. 在使用`strncpy`时，不会保证最后的'\0'一定能够复制进入，所以保险的做法是在使用时多留一个位置给'\0
+```c
+char src[10000] = "something"
+char dest[100];
+strncpy(dest, src, sizeof(dest) - 1);
+dest[sizeof(dest) - 1] = '\0';
+```
+
+2. 带有计数限制n的常见做法
+```c
+// 递减计数
+while(n--) {
+    ...
+}
+
+// 剩余数量，更直观
+size_t remain = n;
+while (remain > 0) {
+    ...
+    remain--;
+}
+
+// 维护一个边界指针
+char *end = p + n;
+while (p < n) {
+    ...
+    p++;
+}
+```
