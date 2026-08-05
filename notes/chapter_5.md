@@ -109,3 +109,165 @@ while (p < n) {
     p++;
 }
 ```
+
+## 5.6
+
+1. `getline(char *s, int lim)`函数: 默认`'\n'`是字符串的一部分，最后一个位置强制写为`'\0'`，也就是说最多读取lim - 1个字符
+```c
+int getline(char *s, int lim)
+{
+    int c, i;
+
+    for (i = 0; i < lim - 1 && (c = getchar()) != EOF && c != '\n'; i++)
+        s[i] = c;
+    if (c == '\n') {
+        s[i] = c;
+        i++;
+    }
+    s[i] = '\0';
+    return i;
+}
+
+```
+2. 在遇到计数器的时候尝试使用自减减少计算，有数组时尝试使用自增简化
+```c
+void writelines(char **lineptr, int nlines)
+{
+    while (nlines--) 
+        printf("%s\n", *lineptr++);
+}
+```
+
+3. 函数指针：`返回类型 (*指针名)(参数列表);`
+    - 函数名本身是地址，保存了该函数机器代码的地址，而函数指针指向这段运算函数的机器码
+    - 例如：`int (*fp)(int, int)`表示fp是一个指针，指向一个函数，这个函数接受两个int类型的参数并且返回一个int类型的值，调用时fp(1, 2)或(*fp)(1, 2)
+    - typedef简化写法：`typedef int (*Compare)(const void *, const void *);`然后`Compare cmp` 和 `int (*cmp)(const void *, const void *)`等价
+
+4. 快排函数`qsort`
+- 第一版，拆分不同职责函数
+    ```c
+    void swap(void *a, void *b, size_t size)
+    {
+        unsigned char tmp;  // unsigned char可以访问任意对象的字节表示
+
+        for (size_t i = 0; i < size; i++) {     // 先把通用指针转化为unsigned char再取字节
+            tmp = ((unsigned char *)a)[i];
+            ((unsigned char *)a)[i] = ((unsigned char *)b)[i];
+            ((unsigned char *)b)[i] = tmp;
+        }
+    }
+
+    void *element(void *base, size_t index, size_t size)   // 直接用void*，因为后面的函数传地址都是void*，可以减少一次类型转换
+    {
+        return (void *)((char *)base + index * size);
+    }
+
+    void qsort(void *base, size_t nmemb, size_t size, int (*cmp)(const void *, const void *))
+    {
+        // 元素个数小于2直接返回
+        if (nmemb < 2)
+            return;
+        
+        // 将第nmemb / 2 个元素设置为标准值
+        size_t pivot = nmemb / 2;
+
+        swap(base, element(base, pivot, size), size);
+        size_t last_index = 0;    // 小于基准的区间中的最后一个元素下标
+
+        for (size_t i = 1; i < nmemb; i++) {
+            if (cmp(element(base, i, size), 0) < 0) 
+                swap(element(base, i, size), element(base, ++last_index, size), size);
+        }
+
+        // 换回去
+        swap(base, element(base, last_index, size), size);
+
+        // 基准左右分区递归
+        if (last_index > 0)
+            qsort(base, last_index, size, cmp);
+        if (last_index + 1 < nmemb)
+            qsort(element(base, last_index + 1, size) , nmemb - last_index - 1, size, cmp);
+    }
+
+    int cmp_int(const void *a, const void *b)
+    {
+        int x = *(const int *)a;
+        int y = *(const int *)b;
+
+        if (x < y)
+            return -1;
+        else if (x > y)
+            return 1;
+        return 0;
+    }
+
+    ```
+- 再版，划分嵌套函数，处理“第几个元素”:**外层提供API，内层使用更适合算法的数据结构**
+```c
+int cmp_int(const void *a, const void *b)
+{
+    int x = *(const int *)a;
+    int y = *(const int *)b;
+
+    if (x < y)
+        return -1;
+    else if (x > y)
+        return 1;
+    return 0;
+}
+
+void swap(void *a, void *b, size_t size)
+{
+    unsigned char tmp;  // unsigned char可以访问任意对象的字节表示
+
+    for (size_t i = 0; i < size; i++) {     // 先把通用指针转化为unsigned char再取字节
+        tmp = ((unsigned char *)a)[i];
+        ((unsigned char *)a)[i] = ((unsigned char *)b)[i];
+        ((unsigned char *)b)[i] = tmp;
+    }
+}
+
+void *element(void *base, size_t index, size_t size)   // 直接用void*，因为后面的函数传地址都是void*，可以减少一次类型转换
+{
+    return (void *)((char *)base + index * size);
+}
+
+void qsort(void *base, size_t nmemb, size_t size, int (*cmp)(const void *, const void *))
+{
+    // 防止下溢
+    if (nmemb < 2)
+        return;
+
+    quick_sort(base, 0, nmemb - 1, size, cmp);  //  初始化一个数组并启动排序
+}
+
+void quick_sort(void *base, size_t left, size_t right, size_t size, int (*cmp)(const void *,const void *))
+{
+    if (left >= right)
+        return;
+
+    size_t pivot = partition(base, left, right, size, cmp);
+
+    // 防止下溢
+    if (pivot > left)
+        quick_sort(base, left, pivot - 1, size, cmp);
+    if (pivot < right)
+        quick_sort(base, pivot + 1, right, size, cmp);
+}
+
+
+size_t partition(void *base, size_t left, size_t right, size_t size, int (*cmp)(const void *,const void *))
+{
+    size_t last = left;     // 小于基准值的区间的最后一个元素的下标，初始值为0 ，代表该区间为空
+
+    for (size_t i = left + 1; i <= right; i++) {
+        if (cmp(element(base, i, size), element(base, left, size)) < 0)
+            swap(element(base, i, size), element(base, ++last, size), size);
+    }
+
+    swap(element(base, left, size), element(base, last, size), size);
+
+    return last;
+}
+
+```
