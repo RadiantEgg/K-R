@@ -289,3 +289,23 @@ enum {
 }
 // 上层函数根据错误码进一步处理
 ```
+
+## 5.8
+
+1. **函数内部私有，但是需要长期存在的数据，需要内部static**，比如根据输入的月份返回对应月份的名称，这个名称是在函数内部查表寻找的，但是需要返回，如果不static，那函数内部的名称就是局部变量，返回会发生segmentation fault。 
+    - 之后的lexer，如果引入关键字的对照，需要建立keyword表
+    ```c
+    Token *get_keyword(char *)
+    {
+        static Token table[] = {
+            {"if", TOKEN_IF},
+            {"while", TOKEN_WHILE},
+            ...
+        };
+        // 对照lexeme中是否为关键字
+        ...
+        return &table[i];
+    }
+    ```
+
+    
